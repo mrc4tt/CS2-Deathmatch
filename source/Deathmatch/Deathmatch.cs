@@ -34,7 +34,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
         Capabilities.RegisterPluginCapability(DeathmatchAPI, () => API);
         VirtualFunctions.CCSPlayer_ItemServices_CanAcquireFunc.Hook(OnWeaponCanAcquire, HookMode.Pre);
         //VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
-	RegisterListener<OnEntityTakeDamagePre>(OnEntityTakeDamagePre);
+        RegisterListener<OnEntityTakeDamagePre>(OnEntityTakeDamagePre);
 
         if (Config.SaveWeapons)
             _ = CreateDatabaseConnection();
