@@ -189,7 +189,7 @@ namespace Deathmatch
 
                 //model.SetModel("characters/models/shared/animsets/animset_uiplayer.vmdl");
                 //model.SetModel("characters/models/ctm_fbi/ctm_fbi_variantf.vmdl");
-                model.SetModel(spawn.Team == CsTeam.CounterTerrorist ? "characters/models/ctm_sas/ctm_sas.vmdl" : "characters/models/tm_leet/tm_leet_variantb.vmdl");
+                model.SetModel(spawn.Team == CsTeam.CounterTerrorist ? "agents/models/ctm_sas/ctm_sas.vmdl" : "agents/models/tm_leet/tm_leet_variantb.vmdl");
                 //
                 model.UseAnimGraph = false;
                 model.AcceptInput("SetAnimation", value: "tools_preview");
