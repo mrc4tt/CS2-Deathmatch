@@ -59,8 +59,8 @@ namespace Deathmatch
 					playerData.Remove(player.Slot);
 				}
 				blockedSpawns.Remove(player.Slot);
-				playersWaitingForRespawn.Remove(player);
-				playersWithSpawnProtection.Remove(player);
+				playersWaitingForRespawn.Remove(player.Slot);
+				playersWithSpawnProtection.Remove(player.Slot);
 			}
 
 			return HookResult.Continue;
@@ -103,10 +103,10 @@ namespace Deathmatch
 				data.KillStreak = 0;
 				if (Config.PlayersPreferences.DamageInfo.Enabled)
 				{
-					foreach (var p in playerData.Keys)
+					foreach (var kv in playerData)
 					{
-						if (p != attacker?.Slot)
-							playerData[p].DamageInfo.Remove(player.Slot);
+						if (kv.Key != attacker?.Slot)
+							kv.Value.DamageInfo.Remove(player.Slot);
 					}
 
 					if (attacker != null && attacker.IsValid && attacker != player && GetPrefsValue(data, "DamageInfo", Config.PlayersPreferences.DamageInfo.DefaultValue))
@@ -132,7 +132,11 @@ namespace Deathmatch
 					@event.FireEventToClient(player);
 			}
 
-			playersWaitingForRespawn[player] = (timer, Server.CurrentTime);
+			// Only schedule respawn if the player is still tracked — disconnect handler clears playerData
+			if (player.IsValid && playerData.ContainsKey(player.Slot))
+			{
+				playersWaitingForRespawn[player.Slot] = (timer, Server.CurrentTime);
+			}
 			if (attacker != null && attacker.IsValid && attacker != player && playerData.TryGetValue(attacker.Slot, out var attackerData) && attacker.PlayerPawn.Value != null)
 			{
 				attackerData.KillStreak++;
