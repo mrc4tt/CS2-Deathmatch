@@ -1,16 +1,11 @@
 <p align="center">
-<b>Deathmatch + MutliCFG</b> plugin is a game mode where players respawn immediately after being killed, allowing them to practice shooting and movement without the typical match constraints. MutliCFG allows you to set up special modes that change the gameplay to different types such as Only Pistols, Only AWP, Rifles, etc.
+<b>Deathmatch + MultiCFG - Forked by Miksen </b> plugin is a game mode where players respawn immediately after being killed, allowing them to practice shooting and movement without the typical match constraints. MultiCFG allows you to set up special modes that change the gameplay to different types, such as Only Pistols, Only AWP, Rifles, etc.
 Use gamemodes like <b>Custom</b> , <b>Casual</b> or <b>Deathmatch</b> for the plugin to work properly.<br>
 Designed for <a href="https://github.com/roflmuffin/CounterStrikeSharp">CounterStrikeSharp</a> framework<br>
 <br>
-<a href="https://buymeacoffee.com/sourcefactory">
-<img src="https://img.buymeacoffee.com/button-api/?text=Support%20Me&emoji=%F0%9F%9A%80&slug=sourcefactory&button_colour=e6005c&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00" />
-</a>
 </p>
 
 ## [Documentation/Wiki](https://docs.sourcefactory.eu/cs2-plugins/deathmatch)
-### Discord Support Server
-[<img src="https://discordapp.com/api/guilds/1149315368465211493/widget.png?style=banner2">](https://discord.gg/Tzmq98gwqF)
 
 ### Main features
 - [x] [Weapon Selection](https://docs.sourcefactory.eu/cs2-plugins/deathmatch/weapons-selection)
@@ -43,7 +38,7 @@ Designed for <a href="https://github.com/roflmuffin/CounterStrikeSharp">CounterS
 - [Limited Zones](https://docs.sourcefactory.eu/deathmatch/modules/limited-zones)
 
 ### Installation
-1. Download the latest verison - https://github.com/NockyCZ/CS2-Deathmatch/releases
+1. Download the latest version - https://github.com/mrc4tt/CS2-Deathmatch/releases
 2. Unzip into your servers `csgo/addons/counterstrikesharp/` dir
 3. Restart the server
 4. Configure the config files and custom modes
