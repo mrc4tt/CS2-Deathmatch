@@ -167,7 +167,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
                                                 p.PrintToCenter($"{Localizer["Hud.NewModeStarting", RemainingTime, NextModeData.Name]}");
                                         }
                                     }
-                                    else if (!string.IsNullOrEmpty(ActiveMode.CenterMessageText))
+                                    else if (!string.IsNullOrEmpty(ActiveMode.CenterMessageText) && Server.CurrentTime < ModeMessageHideTime)
                                     {
                                         if (Config.Gameplay.HudType == 0)
                                             p.PrintToCenter(ModeCenterMessage);
@@ -373,7 +373,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
                 HudHasContent = true;
             }
         }
-        else if (!string.IsNullOrEmpty(ActiveMode.CenterMessageText))
+        else if (!string.IsNullOrEmpty(ActiveMode.CenterMessageText) && Server.CurrentTime < ModeMessageHideTime)
         {
             HudCenterHtml = ModeCenterMessage;
             HudCenterMsg = ModeCenterMessage;
@@ -429,6 +429,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
             ModeCenterMessage = ActiveMode.CenterMessageText.Replace("{NEXTMODE}", modeData.Name);
             ModeCenterMessage = ModeCenterMessage.Replace("{REMAININGTIME}", RemainingTime.ToString());
         }
+        ModeMessageHideTime = Config.Gameplay.ModeMessageDuration > 0 ? Server.CurrentTime + Config.Gameplay.ModeMessageDuration : float.MaxValue;
         SetupDeathmatchConfiguration(ActiveMode, bNewmode);
 
         Server.NextFrame(() =>

@@ -16,6 +16,7 @@ namespace Deathmatch
         private CCSGameRules? GameRules;
         public static int NextMode;
         public static string ModeCenterMessage = "";
+        public static float ModeMessageHideTime = 0;
         public static string ActiveCustomMode = "";
         public static int ModeTimer = 0;
         public static int RemainingTime = 500;
