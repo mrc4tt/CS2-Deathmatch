@@ -1,3 +1,8 @@
+> **fshost build.** This is fshost's copy of **[NockyCZ/CS2-Deathmatch](https://github.com/NockyCZ/CS2-Deathmatch)**
+> by **NockyCZ**; all credit goes to the original author. MIT license (see [LICENSE](LICENSE)). Built against the
+> CounterStrikeSharp API fshost runs (mrc4tt/CounterStrikeSharp). Releases: **Deathmatch.zip** from
+> [mrc4tt/CS2-Deathmatch releases](https://github.com/mrc4tt/CS2-Deathmatch/releases/latest). Changes: [CHANGELOG.md](CHANGELOG.md).
+
 <p align="center">
 <b>Deathmatch + MutliCFG</b> plugin is a game mode where players respawn immediately after being killed, allowing them to practice shooting and movement without the typical match constraints. MutliCFG allows you to set up special modes that change the gameplay to different types such as Only Pistols, Only AWP, Rifles, etc.
 Use gamemodes like <b>Custom</b> , <b>Casual</b> or <b>Deathmatch</b> for the plugin to work properly.<br>

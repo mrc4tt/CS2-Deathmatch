@@ -16,3 +16,8 @@
 # Package files
 *.nupkg
 *.snupkg
+
+# Local
+.css/
+dist/
+.claude/
