@@ -458,6 +458,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
         HudCenterHtml = "";
         HudCenterMsg = "";
         HudHasContent = false;
+        ResetHudSendState();
         _hudPlayerCache.Clear();
 
         // Clear DeathmatchAPI static caches — they're held across plugin reloads otherwise,
@@ -536,8 +537,40 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
                 continue;
 
             if (Config.Gameplay.HudType == 1)
-                p.PrintToCenterHtml(HudCenterHtml);
+                SendHudHtml(p, HudCenterHtml);
         }
+    }
+
+    // The center HTML stays up for 5 s per send, but it used to be resent to every player on every tick
+    // (64 times a second). Each send makes the client's Panorama re-layout the panel, which costs FPS.
+    // The text only changes once a second (RebuildHudCache), so send when it changed or once a second
+    // as a keepalive. Indexed by slot.
+    private readonly string?[] _hudLastSentHtml = new string?[64];
+    private readonly float[] _hudLastSentTime = new float[64];
+    private const float HudKeepAliveSeconds = 1.0f;
+
+    private void SendHudHtml(CCSPlayerController player, string html)
+    {
+        var slot = player.Slot;
+        if ((uint)slot >= (uint)_hudLastSentHtml.Length)
+        {
+            player.PrintToCenterHtml(html);
+            return;
+        }
+
+        var now = Server.CurrentTime;
+        if (ReferenceEquals(_hudLastSentHtml[slot], html) && now - _hudLastSentTime[slot] < HudKeepAliveSeconds && now >= _hudLastSentTime[slot])
+            return;
+
+        player.PrintToCenterHtml(html);
+        _hudLastSentHtml[slot] = html;
+        _hudLastSentTime[slot] = now;
+    }
+
+    private void ResetHudSendState()
+    {
+        Array.Clear(_hudLastSentHtml);
+        Array.Clear(_hudLastSentTime);
     }
 
     public void SetupCustomMode(string modeId)
