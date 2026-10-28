@@ -25,7 +25,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
 {
     public override string ModuleName => "Deathmatch";
     public override string ModuleAuthor => "Nocky & Miksen(Forked)";
-    public override string ModuleVersion => "1.3.8";
+    public override string ModuleVersion => "1.3.9";
 
     public void OnConfigParsed(DeathmatchConfig config)
     {
@@ -179,6 +179,8 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
         RegisterListener<OnMapEnd>(_onMapEndDelegate);
         _onMapStartDelegate = mapName =>
         {
+            _gameTypeCvar ??= ConVar.Find("game_type");
+            _mapStartGameType = _gameTypeCvar?.GetPrimitiveValue<int>() ?? -1;
             blockedSpawns.Clear();
             savedSpawnsModel.Clear();
             playerData.Clear();
@@ -427,6 +429,8 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
 
     public override void Unload(bool hotReload)
     {
+        ReloadMapIfLeavingDeathmatchRules(hotReload);
+
         VirtualFunctions.CCSPlayer_ItemServices_CanAcquireFunc.Unhook(OnWeaponCanAcquire, HookMode.Pre);
         //VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
         RemoveListener<OnEntityTakeDamagePre>(OnEntityTakeDamagePre);
@@ -666,7 +670,34 @@ sv_cheats 0
         return (_gameTypeCvar.GetPrimitiveValue<int>(), _gameModeCvar.GetPrimitiveValue<int>()) is (0, 0) or (1, 2) or (3, 0);
     }
 
-    private static readonly string[] MapChangeCommands = { "changelevel", "map", "host_workshop_map", "ds_workshop_changelevel", "game_alias" };
+    // Unloaded on a switch to another mode (game_alias competitive + css_plugins unload) while the map
+    // was loaded in the deathmatch game mode (game_type 1): game_type only takes effect on a map load,
+    // so the engine and the connected clients stay in deathmatch rules (grenades not buyable, DM buy
+    // menu) until the map reloads. Reload it so the next mode starts on its own rules. Not on a hot
+    // reload, and not when game_type is still 1 (dmon.cfg unloads and loads Deathmatch again).
+    private void ReloadMapIfLeavingDeathmatchRules(bool hotReload)
+    {
+        if (hotReload || _mapStartGameType != 1)
+            return;
+
+        _gameTypeCvar ??= ConVar.Find("game_type");
+        int gameType = _gameTypeCvar?.GetPrimitiveValue<int>() ?? 1;
+        if (gameType == 1)
+            return;
+
+        string mapName = Server.MapName;
+        if (string.IsNullOrEmpty(mapName))
+            return;
+
+        // A stock map is a vpk in csgo/maps; anything else is a workshop map, which changelevel can't mount.
+        bool stockMap = File.Exists(Path.Combine(Server.GameDirectory, "csgo", "maps", $"{mapName}.vpk"));
+        string command = stockMap ? $"changelevel \"{mapName}\"" : $"ds_workshop_changelevel \"{mapName}\"";
+        SendConsoleMessage($"[Deathmatch] Left the deathmatch game mode (game_type {gameType}), reloading {mapName} so its rules apply", ConsoleColor.Yellow);
+        _mapStartGameType = -1;
+        Server.ExecuteCommand(command);
+    }
+
+    private static readonly string[] MapChangeCommands ={ "changelevel", "map", "host_workshop_map", "ds_workshop_changelevel", "game_alias" };
 
     private HookResult OnMapChangeCommand(CCSPlayerController? player, CommandInfo info)
     {

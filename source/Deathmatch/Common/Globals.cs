@@ -27,6 +27,9 @@ namespace Deathmatch
         public static bool IsCasualGamemode;
         private ConVar? _gameTypeCvar;
         private ConVar? _gameModeCvar;
+        // game_type the current map was loaded with (-1 = unknown, plugin loaded mid-map). game_type only
+        // takes effect on a map load, so this is the mode the game rules really run in.
+        private int _mapStartGameType = -1;
         // Soundevent guids of the currently playing New Mode Sound per player slot, so it can be stopped
         private readonly Dictionary<int, uint> _newModeSoundGuids = new();
         public static bool DefaultMapSpawnDisabled = false;
