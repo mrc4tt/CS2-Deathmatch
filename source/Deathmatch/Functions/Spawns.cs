@@ -22,14 +22,18 @@ namespace Deathmatch
             //    ? (team == CsTeam.Terrorist ? spawnPositionsT : spawnPositionsCT)
             //    : spawnPositionsT.Concat(spawnPositionsCT);
 
-            IEnumerable<KeyValuePair<Vector, QAngle>> spawnsDictionary = Config.SpawnSystem.TeamSpawnsSeparation
+            // Materialised, not lazy: this sequence is walked once by the emptiness check here and
+            // again by GetAvailableSpawn, and every walk re-ran the Where/Select and re-allocated
+            // a KeyValuePair per spawn point.
+            IEnumerable<KeyValuePair<Vector, QAngle>> spawnsDictionary = (Config.SpawnSystem.TeamSpawnsSeparation
                 ? spawnPoints.Where(spawn => spawn.Team == team)
                             .Select(spawn => new KeyValuePair<Vector, QAngle>(spawn.Position, spawn.Angle))
-                : spawnPoints.Select(spawn => new KeyValuePair<Vector, QAngle>(spawn.Position, spawn.Angle));
+                : spawnPoints.Select(spawn => new KeyValuePair<Vector, QAngle>(spawn.Position, spawn.Angle)))
+                .ToList();
 
             if (blockedSpawns.TryGetValue(player.Slot, out var lastSpawn))
             {
-                spawnsDictionary = spawnsDictionary.Where(spawn => spawn.Key != lastSpawn);
+                spawnsDictionary = spawnsDictionary.Where(spawn => spawn.Key != lastSpawn).ToList();
             }
 
             if (!spawnsDictionary.Any())
@@ -47,13 +51,39 @@ namespace Deathmatch
             }
         }
 
+        // Snapshot of the live enemy positions used by the spawn search, plus the shuffled
+        // candidate list. Both are reused across calls - on a busy deathmatch server this method
+        // runs on every single respawn.
+        // HasOrigin mirrors GetDistance's null contract: a pawn with no AbsOrigin counts as
+        // distance 100, exactly as before.
+        private readonly List<(bool HasOrigin, float X, float Y)> _spawnCheckOrigins = new();
+        private readonly List<KeyValuePair<Vector, QAngle>> _shuffledSpawns = new();
+
         public KeyValuePair<Vector, QAngle>? GetAvailableSpawn(CCSPlayerController player, IEnumerable<KeyValuePair<Vector, QAngle>> spawnsList)
         {
-            var playerPawns = Utilities.GetPlayers()
-                .Where(p => !p.IsHLTV && p.LifeState == (byte)LifeState_t.LIFE_ALIVE && p != player)
-                .Select(p => p.PlayerPawn.Value);
+            // playerPawns used to be a LAZY LINQ chain that was enumerated inside the spawn loop
+            // below. That meant Utilities.GetPlayers() - a native scan returning a freshly
+            // allocated List - plus a PlayerPawn wrapper and an AbsOrigin wrapper per player ran
+            // again for EVERY candidate spawn. With ~60 spawns and 20 alive players that is ~60
+            // player-list allocations and ~2400 wrapper allocations for a single respawn, which is
+            // where the deathmatch frame spikes and the MB/s allocation rate came from.
+            // Snapshot the positions once as plain floats instead.
+            _spawnCheckOrigins.Clear();
+            foreach (var p in Utilities.GetPlayers())
+            {
+                if (p.IsHLTV || p.LifeState != (byte)LifeState_t.LIFE_ALIVE || p == player)
+                    continue;
 
-            var shuffledSpawns = spawnsList.ToList();
+                var origin = p.PlayerPawn.Value?.AbsOrigin;
+                if (origin == null)
+                    _spawnCheckOrigins.Add((false, 0f, 0f));
+                else
+                    _spawnCheckOrigins.Add((true, origin.X, origin.Y));
+            }
+
+            var shuffledSpawns = _shuffledSpawns;
+            shuffledSpawns.Clear();
+            shuffledSpawns.AddRange(spawnsList);
             for (int i = shuffledSpawns.Count - 1; i > 0; i--)
             {
                 int j = Random.Shared.Next(i + 1);
@@ -65,9 +95,22 @@ namespace Deathmatch
             foreach (var spawn in shuffledSpawns)
             {
                 bool isValidSpawn = true;
-                foreach (var pawn in playerPawns)
+                var spawnPos = spawn.Key;
+                foreach (var (hasOrigin, originX, originY) in _spawnCheckOrigins)
                 {
-                    var distance = GetDistance(pawn?.AbsOrigin, spawn.Key);
+                    // GetDistance is 2D and returns 100 for a null vector - kept identical here.
+                    double distance;
+                    if (!hasOrigin)
+                    {
+                        distance = 100;
+                    }
+                    else
+                    {
+                        double dx = originX - spawnPos.X;
+                        double dy = originY - spawnPos.Y;
+                        distance = Math.Sqrt(dx * dx + dy * dy);
+                    }
+
                     if (distance < CheckedEnemiesDistance)
                     {
                         isValidSpawn = false;
