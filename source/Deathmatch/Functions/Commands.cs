@@ -27,7 +27,7 @@ namespace Deathmatch
 
                         if (ActiveMode.RandomWeapons)
                         {
-                            info.ReplyToCommand($"{Localizer["Chat.Prefix"]} {Localizer["Chat.WeaponsSelectIsDisabled"]}");
+                            info.ReplyToCommand(TrChat(player, "Chat.WeaponsSelectIsDisabled"));
                             return;
                         }
                         SetupPlayerWeapons(player, weapon_name, info);
@@ -41,7 +41,7 @@ namespace Deathmatch
 
                         if (ActiveMode.RandomWeapons)
                         {
-                            info.ReplyToCommand($"{Localizer["Chat.Prefix"]} {Localizer["Chat.WeaponsSelectIsDisabled"]}");
+                            info.ReplyToCommand(TrChat(player, "Chat.WeaponsSelectIsDisabled"));
                             return;
                         }
 
@@ -93,13 +93,13 @@ namespace Deathmatch
         {
             if (player.IsValid && !player.PawnIsAlive)
             {
-                info.ReplyToCommand($"{Localizer["Chat.Prefix"]} You have to be alive to see the distance!");
+                info.ReplyToCommand(TrChat(player, "Chat.CheckDistanceNotAlive"));
                 return;
             }
             var distance = info.GetArg(1);
             if (!int.TryParse(distance, out int radius))
             {
-                info.ReplyToCommand($"{Localizer["Chat.Prefix"]} The distance must be a number!");
+                info.ReplyToCommand(TrChat(player, "Chat.DistanceMustBeNumber"));
                 return;
             }
             var position = player.PlayerPawn.Value!.AbsOrigin!;
@@ -135,13 +135,13 @@ namespace Deathmatch
             {
                 if (!Config.CustomModes.ContainsKey(modeid))
                 {
-                    info.ReplyToCommand($"{Localizer["Chat.Prefix"]} A mod with a number {modeid} doesn't exist!");
+                    info.ReplyToCommand(TrChat(player, "Chat.ModeDoesNotExist", modeid));
                     return;
                 }
             }
             else
             {
-                info.ReplyToCommand($"{Localizer["Chat.Prefix"]} Mode ID must be a number!");
+                info.ReplyToCommand(TrChat(player, "Chat.ModeIdMustBeNumber"));
                 return;
             }
             SetupCustomMode(modeid);
@@ -156,12 +156,12 @@ namespace Deathmatch
         {
             if (Config.SpawnSystem.SpawnsMethod != 0)
             {
-                info.ReplyToCommand($"{Localizer["Chat.Prefix"]} The Spawn Editor cannot be used if you are using the default spawns!");
+                info.ReplyToCommand(TrChat(player, "Chat.SpawnsEditorDefaultSpawns"));
                 return;
             }
             if (player.IsValid && !player.PawnIsAlive)
             {
-                info.ReplyToCommand($"{Localizer["Chat.Prefix"]} You have to be alive to use Spawns Editor!");
+                info.ReplyToCommand(TrChat(player, "Chat.SpawnsEditorNotAlive"));
                 return;
             }
             OpenEditorMenu(player);

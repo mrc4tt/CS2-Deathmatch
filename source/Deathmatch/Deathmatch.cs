@@ -25,7 +25,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
 {
     public override string ModuleName => "Deathmatch";
     public override string ModuleAuthor => "Nocky & Miksen(Forked)";
-    public override string ModuleVersion => "1.3.9";
+    public override string ModuleVersion => "1.3.10";
 
     public void OnConfigParsed(DeathmatchConfig config)
     {
@@ -274,6 +274,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
                             secTimer = 0;
                             if (VisibleHud)
                             {
+                                _hudLangCache.Clear();
                                 foreach (var p in Utilities.GetPlayers())
                                 {
                                     if (!playerData.TryGetValue(p.Slot, out var data))
@@ -287,12 +288,12 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
                                         if (RemainingTime == 0)
                                         {
                                             if (Config.Gameplay.HudType == 0)
-                                                p.PrintToCenter($"{Localizer["Hud.NewModeStarted"]}");
+                                                p.PrintToCenter(TrCached(_hudLangCache, p, "Hud.NewModeStarted"));
                                         }
                                         else if (!Config.General.HideModeRemainingTime && Config.CustomModes.TryGetValue(NextMode.ToString(), out var NextModeData))
                                         {
                                             if (Config.Gameplay.HudType == 0)
-                                                p.PrintToCenter($"{Localizer["Hud.NewModeStarting", RemainingTime, NextModeData.Name]}");
+                                                p.PrintToCenter(TrCached(_hudLangCache, p, "Hud.NewModeStarting", RemainingTime, NextModeData.Name));
                                         }
                                     }
                                     else if (!string.IsNullOrEmpty(ActiveMode.CenterMessageText) && Server.CurrentTime < ModeMessageHideTime)
@@ -463,6 +464,8 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
         HudCenterMsg = "";
         HudHasContent = false;
         _hudPlayerCache.Clear();
+        _hudPlayerText.Clear();
+        _hudLangCache.Clear();
 
         // Clear DeathmatchAPI static caches — they're held across plugin reloads otherwise,
         // retaining captured closures (Action<CCSPlayerController, Menu>) and stale Preference instances.
@@ -485,12 +488,15 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
         HudHasContent = false;
         HudCenterHtml = "";
         HudCenterMsg = "";
+        string? hudKey = null;
+        object[] hudArgs = Array.Empty<object>();
 
         if (RemainingTime <= Config.Gameplay.NewModeCountdown && Config.Gameplay.NewModeCountdown > 0)
         {
             if (RemainingTime == 0)
             {
                 string s = Localizer["Hud.NewModeStarted"];
+                hudKey = "Hud.NewModeStarted";
                 HudCenterHtml = s;
                 HudCenterMsg = s;
                 HudHasContent = true;
@@ -498,6 +504,8 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
             else if (!Config.General.HideModeRemainingTime && Config.CustomModes.TryGetValue(NextMode.ToString(), out var nextModeData))
             {
                 string s = Localizer["Hud.NewModeStarting", RemainingTime, nextModeData.Name];
+                hudKey = "Hud.NewModeStarting";
+                hudArgs = new object[] { RemainingTime, nextModeData.Name };
                 HudCenterHtml = s;
                 HudCenterMsg = s;
                 HudHasContent = true;
@@ -518,6 +526,19 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
             foreach (var p in Utilities.GetPlayers())
                 _hudPlayerCache.Add(p);
             _lastHudPlayerCacheTime = now;
+        }
+
+        // Per-player HUD text in each player's language, resolved here at 1Hz (one translation
+        // per language) so OnTickHudFast only reads it. Custom mode text is config text, same for all.
+        _hudPlayerText.Clear();
+        _hudLangCache.Clear();
+        for (int i = 0; i < _hudPlayerCache.Count; i++)
+        {
+            var p = _hudPlayerCache[i];
+            if (hudKey == null || p == null || !p.IsValid)
+                _hudPlayerText.Add(HudCenterHtml);
+            else
+                _hudPlayerText.Add(TrCached(_hudLangCache, p, hudKey, hudArgs));
         }
     }
 
@@ -540,7 +561,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
                 continue;
 
             if (Config.Gameplay.HudType == 1)
-                p.PrintToCenterHtml(HudCenterHtml);
+                p.PrintToCenterHtml(i < _hudPlayerText.Count ? _hudPlayerText[i] : HudCenterHtml);
         }
     }
 
@@ -573,7 +594,7 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
         ModeTimer = 0;
 
         if (isNewMode)
-            Server.PrintToChatAll($"{Localizer["Chat.Prefix"]} {Localizer["Chat.NewModeStarted", mode.Name]}");
+            PrintToChatAllTranslated("Chat.NewModeStarted", mode.Name);
 
         Server.ExecuteCommand($"mp_free_armor {mode.Armor};mp_damage_headshot_only {mode.OnlyHS};mp_ct_default_primary \"\";mp_t_default_primary \"\";mp_ct_default_secondary \"\";mp_t_default_secondary \"\"");
 

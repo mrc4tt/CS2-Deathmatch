@@ -71,12 +71,12 @@ namespace Deathmatch
                     : (restrictDataNonVIP.T, restrictDataVIP.T);
         }
 
-        public string GetWeaponRestrictLozalizer(int bullets)
+        public string GetWeaponRestrictLozalizer(CCSPlayerController? player, int bullets)
         {
             return bullets switch
             {
-                -1 => Localizer["Chat.Disabled"],
-                0 => Localizer["Chat.Unlimited"],
+                -1 => Tr(player, "Chat.Disabled"),
+                0 => Tr(player, "Chat.Unlimited"),
                 _ => bullets.ToString()
             };
         }

@@ -23,42 +23,42 @@ namespace Deathmatch
 
             if (!player.PawnIsAlive)
             {
-                player.PrintToChat($"{Localizer["Chat.Prefix"]} You have to be alive to use Spawns Editor!");
+                player.PrintToChat(TrChat(player, "Chat.SpawnsEditorNotAlive"));
                 return;
             }
 
-            var Menu = new CenterHtmlMenu("<font class='fontSize-l' color='red'>Spawns Editor</font><br> ", this);
+            var Menu = new CenterHtmlMenu($"<font class='fontSize-l' color='red'>{Tr(player, "Menu.SpawnsEditor")}</font><br> ", this);
 
             var ctSpawns = DefaultMapSpawnDisabled ? spawnPoints.Count(x => x.Team == CsTeam.CounterTerrorist) : 0;
             var tSpawns = DefaultMapSpawnDisabled ? spawnPoints.Count(x => x.Team == CsTeam.Terrorist) : 0;
 
-            Menu.AddMenuOption($"Add CT Spawn ({ctSpawns})", (player, opt) =>
+            Menu.AddMenuOption(Tr(player, "Menu.AddCTSpawn", ctSpawns), (player, opt) =>
             {
                 AddNewSpawnPoint(player.PlayerPawn.Value?.AbsOrigin!, player.PlayerPawn.Value?.AbsRotation!, CsTeam.CounterTerrorist);
-                player.PrintToChat($"{Localizer["Chat.Prefix"]} Spawn for the {ChatColors.DarkBlue}CT team{ChatColors.Default} has been added. (Total: {ChatColors.Green}{spawnPoints.Count(x => x.Team == CsTeam.CounterTerrorist)}{ChatColors.Default})");
+                player.PrintToChat(TrChat(player, "Chat.SpawnAddedCT", spawnPoints.Count(x => x.Team == CsTeam.CounterTerrorist)));
                 DisableDefaultSpawns();
                 OpenEditorMenu(player);
             });
-            Menu.AddMenuOption($"Add T Spawn ({tSpawns})", (player, opt) =>
+            Menu.AddMenuOption(Tr(player, "Menu.AddTSpawn", tSpawns), (player, opt) =>
             {
                 AddNewSpawnPoint(player.PlayerPawn.Value?.AbsOrigin!, player.PlayerPawn.Value?.AbsRotation!, CsTeam.Terrorist);
-                player.PrintToChat($"{Localizer["Chat.Prefix"]} Spawn for the {ChatColors.Orange}T team{ChatColors.Default} has been added. (Total: {ChatColors.Green}{spawnPoints.Count(x => x.Team == CsTeam.Terrorist)}{ChatColors.Default})");
+                player.PrintToChat(TrChat(player, "Chat.SpawnAddedT", spawnPoints.Count(x => x.Team == CsTeam.Terrorist)));
                 DisableDefaultSpawns();
                 OpenEditorMenu(player);
             });
 
-            Menu.AddMenuOption("Remove the Nearest Spawn", (player, opt) =>
+            Menu.AddMenuOption(Tr(player, "Menu.RemoveNearestSpawn"), (player, opt) =>
             {
                 RemoveNearestSpawnPoint(player.PlayerPawn.Value!.AbsOrigin);
-                player.PrintToChat($"{Localizer["Chat.Prefix"]} The nearest spawn point has been removed!");
+                player.PrintToChat(TrChat(player, "Chat.SpawnRemoved"));
                 DisableDefaultSpawns();
                 OpenEditorMenu(player);
             });
 
-            Menu.AddMenuOption("<font class='fontSize-m' color='cyan'>Save Spawns</font>", (player, opt) =>
+            Menu.AddMenuOption($"<font class='fontSize-m' color='cyan'>{Tr(player, "Menu.SaveSpawns")}</font>", (player, opt) =>
             {
                 SaveSpawnsFile();
-                player.PrintToChat($"{Localizer["Chat.Prefix"]} Spawns have been successfully saved!");
+                player.PrintToChat(TrChat(player, "Chat.SpawnsSaved"));
                 RemoveSpawnModels();
                 MenuManager.CloseActiveMenu(player);
             });
@@ -69,10 +69,10 @@ namespace Deathmatch
 
         public void OpenMainMenu(CCSPlayerController player)
         {
-            var Menu = new CenterHtmlMenu($"{Localizer["Menu.Title"]}", this);
+            var Menu = new CenterHtmlMenu(Tr(player, "Menu.Title"), this);
             foreach (var category in Categorie.GetAllCategories().Where(c => Preferences.Menu.GetOptionsByCategory(c).Any()))
             {
-                Menu.AddMenuOption($"{Localizer[category.MenuOption]}", (player, opt) => OpenCategoryMenu(player, category));
+                Menu.AddMenuOption(Tr(player, category.MenuOption), (player, opt) => OpenCategoryMenu(player, category));
             }
 
             foreach (var option in Preferences.Menu.GetAllOptions().Where(x => !string.IsNullOrEmpty(x.Name) && x.Category == null && x.OnChoose != null))
@@ -80,7 +80,7 @@ namespace Deathmatch
                 if (option.Permission != null && !AdminManager.PlayerHasPermissions(player, option.Permission))
                     continue;
 
-                Menu.AddMenuOption($"{Localizer[option.Name!]}", (player, opt) =>
+                Menu.AddMenuOption(Tr(player, option.Name!), (player, opt) =>
                 {
                     //if (option.OnChoose != null)
                     option.OnChoose!(player, option);
@@ -98,7 +98,7 @@ namespace Deathmatch
 
             var title = category.MenuTitle;
             if (category.UseLocalizer)
-                title = Localizer[category.MenuTitle];
+                title = Tr(player, category.MenuTitle);
 
             bool IsVIP = AdminManager.PlayerHasPermissions(player, Config.PlayersSettings.VIPFlag);
             var Menu = new CenterHtmlMenu(title, this);
@@ -112,8 +112,8 @@ namespace Deathmatch
                 if (option.Preference.BooleanData != null)
                 {
 
-                    var boolValue = GetPrefsValue(data, option.Preference.Name, option.Preference.BooleanData.DefaultValue) ? "ON" : "OFF";
-                    Menu.AddMenuOption($"{Localizer[$"Prefs.{option.Preference.Name}"]} [{boolValue}]", (player, opt) =>
+                    var boolValue = GetPrefsValue(data, option.Preference.Name, option.Preference.BooleanData.DefaultValue) ? Tr(player, "Menu.On") : Tr(player, "Menu.Off");
+                    Menu.AddMenuOption($"{Tr(player, $"Prefs.{option.Preference.Name}")} [{boolValue}]", (player, opt) =>
                     {
                         SwitchBooleanPrefsValue(player, option.Preference.Name);
                         OpenCategoryMenu(player, category);
@@ -122,7 +122,7 @@ namespace Deathmatch
                 else if (option.Preference.Data != null)
                 {
                     var currentValue = GetPrefsValue(data, option.Preference.Name, option.Preference.Data.DefaultValue) as string;
-                    Menu.AddMenuOption($"{Localizer[$"Prefs.{option.Preference.Name}"]} [{currentValue}]", (player, opt) =>
+                    Menu.AddMenuOption($"{Tr(player, $"Prefs.{option.Preference.Name}")} [{currentValue}]", (player, opt) =>
                     {
                         SwitchStringPrefsValue(player, option.Preference.Name, option.Preference.Data.Options, currentValue);
                         OpenCategoryMenu(player, category);
@@ -137,7 +137,7 @@ namespace Deathmatch
                 }
             }
             if (Categorie.GetAllCategories().Count > 1)
-                Menu.AddMenuOption($"{Localizer["Menu.Back"]}", (player, opt) => OpenMainMenu(player));
+                Menu.AddMenuOption(Tr(player, "Menu.Back"), (player, opt) => OpenMainMenu(player));
 
             Menu.Open(player);
         }
@@ -149,16 +149,16 @@ namespace Deathmatch
             FunctionsMenu();
             if (Config.General.DisplayZonesEditorInMenu)
             {
-                Menu.AddOption("Spawns Editor", null, (player, option) =>
+                Menu.AddOption("Menu.SpawnsEditor", null, (player, option) =>
                 {
                     if (Config.SpawnSystem.SpawnsMethod != 0)
                     {
-                        player.PrintToChat($"{Localizer["Chat.Prefix"]} The Spawn Editor cannot be used if you are using the default spawns!");
+                        player.PrintToChat(TrChat(player, "Chat.SpawnsEditorDefaultSpawns"));
                         return;
                     }
                     if (player.IsValid && !player.PawnIsAlive)
                     {
-                        player.PrintToChat($"{Localizer["Chat.Prefix"]} You have to be alive to use Spawns Editor!");
+                        player.PrintToChat(TrChat(player, "Chat.SpawnsEditorNotAlive"));
                         return;
                     }
                     OpenEditorMenu(player);
@@ -173,7 +173,7 @@ namespace Deathmatch
                 return;
             }
 
-            var soundsMenu = RegisterMenuCategory("SOUNDS", "Sounds", "Sounds Menu");
+            var soundsMenu = RegisterMenuCategory("SOUNDS", "Menu.SoundsTitle", "Menu.Sounds", true);
             if (soundsMenu == null)
                 return;
 
@@ -244,7 +244,7 @@ namespace Deathmatch
                 return;
             }
 
-            var functionsMenu = RegisterMenuCategory("FUNCTIONS", "Functions", "Functions Menu");
+            var functionsMenu = RegisterMenuCategory("FUNCTIONS", "Menu.FunctionsTitle", "Menu.Functions", true);
             if (functionsMenu == null)
                 return;
 

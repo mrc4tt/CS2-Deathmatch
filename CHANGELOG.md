@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.10
+- Per-player translations: chat, center and HUD messages and menus are shown in each player's own language (set with `css_lang`) instead of the server language. Mode-change announcements and the new-mode countdown are sent to each player in their language. Console replies and logs stay in the server language.
+- The spawns editor texts, the `/gun` usage hint, the ON/OFF menu values and the Sounds/Functions menu titles now come from the lang files (new keys added to every language).
+- New languages: Brazilian Portuguese (`pt-BR`), Turkish (`tr`) and Albanian (`sq`).
+
 ## 1.3.9
 - Leaving the deathmatch game mode reloads the map. When Deathmatch is unloaded for another mode (`game_alias competitive` + `css_plugins unload`) on a map that was loaded with `game_type 1`, the engine and the connected players stayed in deathmatch rules until the next map change: grenades could not be bought in practice, and the DM buy menu stayed. The map now reloads (`changelevel`, or `ds_workshop_changelevel` for workshop maps). Not on a hot reload, and not when `game_type` is still 1.
 

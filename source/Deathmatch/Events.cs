@@ -113,15 +113,15 @@ namespace Deathmatch
 					{
 						if (data.DamageInfo.TryGetValue(attacker.Slot, out var damageInfo))
 						{
-							var givenDamageMessage = Localizer["Chat.GivenDamageVictim", attacker.PlayerName, damageInfo.Damage, damageInfo.Hits];
+							var givenDamageMessage = Tr(player, "Chat.GivenDamageVictim", attacker.PlayerName, damageInfo.Damage, damageInfo.Hits);
 							if (!string.IsNullOrEmpty(givenDamageMessage))
-								player.PrintToChat(Localizer["Chat.Prefix"] + " " + givenDamageMessage);
+								player.PrintToChat(Tr(player, "Chat.Prefix") + " " + givenDamageMessage);
 						}
 						else
 						{
-							var givenDamageMessage = Localizer["Chat.NoDamageGiven", attacker.PlayerName];
+							var givenDamageMessage = Tr(player, "Chat.NoDamageGiven", attacker.PlayerName);
 							if (!string.IsNullOrEmpty(givenDamageMessage))
-								player.PrintToChat(Localizer["Chat.Prefix"] + " " + givenDamageMessage);
+								player.PrintToChat(Tr(player, "Chat.Prefix") + " " + givenDamageMessage);
 						}
 						data.DamageInfo.Clear();
 					}
@@ -144,9 +144,9 @@ namespace Deathmatch
 				{
 					if (attackerData.DamageInfo.TryGetValue(player.Slot, out var damageInfo))
 					{
-						var givenDamageMessage = Localizer["Chat.GivenDamageAttacker", player.PlayerName, damageInfo.Damage, damageInfo.Hits];
+						var givenDamageMessage = Tr(attacker, "Chat.GivenDamageAttacker", player.PlayerName, damageInfo.Damage, damageInfo.Hits);
 						if (!string.IsNullOrEmpty(givenDamageMessage))
-							attacker.PrintToChat(Localizer["Chat.Prefix"] + " " + givenDamageMessage);
+							attacker.PrintToChat(Tr(attacker, "Chat.Prefix") + " " + givenDamageMessage);
 						attackerData.DamageInfo.Remove(player.Slot);
 					}
 				}
@@ -306,7 +306,7 @@ namespace Deathmatch
 
 			if (!ActiveMode.KnifeDamage && damageInfo.Ability.Value != null && (damageInfo.Ability.Value.DesignerName.Contains("knife") || damageInfo.Ability.Value.DesignerName.Contains("bayonet")))
 			{
-				attacker.PrintToCenter(Localizer["Hud.KnifeDamageIsDisabled"]);
+				attacker.PrintToCenter(Tr(attacker, "Hud.KnifeDamageIsDisabled"));
 				damageInfo.Damage = 0;
 				return HookResult.Continue;
 			}
@@ -348,7 +348,7 @@ namespace Deathmatch
 
 			if (!ActiveMode.KnifeDamage && damageInfo.Ability.Value != null && (damageInfo.Ability.Value.DesignerName.Contains("knife") || damageInfo.Ability.Value.DesignerName.Contains("bayonet")))
 			{
-				attacker.PrintToCenter(Localizer["Hud.KnifeDamageIsDisabled"]);
+				attacker.PrintToCenter(Tr(attacker, "Hud.KnifeDamageIsDisabled"));
 				damageInfo.Damage = 0;
 				return HookResult.Continue;
 			}
@@ -412,7 +412,7 @@ namespace Deathmatch
 			if (ActiveMode.RandomWeapons)
 			{
 				PlaySound(player, Config.SoundSettings.CantEquipSound);
-				player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.WeaponsSelectIsDisabled"]}");
+				player.PrintToChat(TrChat(player, "Chat.WeaponsSelectIsDisabled"));
 				hook.SetReturn(AcquireResult.AlreadyPurchased);
 				return HookResult.Handled;
 			}
@@ -423,8 +423,8 @@ namespace Deathmatch
 				{
 					PlaySound(player, Config.SoundSettings.CantEquipSound);
 
-					string replacedweaponName = Localizer[weaponName];
-					player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.WeaponIsDisabled", replacedweaponName]}");
+					string replacedweaponName = Tr(player, weaponName);
+					player.PrintToChat(TrChat(player, "Chat.WeaponIsDisabled", replacedweaponName));
 				}
 				hook.SetReturn(AcquireResult.AlreadyPurchased);
 				return HookResult.Handled;
@@ -432,7 +432,7 @@ namespace Deathmatch
 
 			if (playerData.TryGetValue(player.Slot, out var data))
 			{
-				string localizerWeaponName = Localizer[weaponName];
+				string localizerWeaponName = Tr(player, weaponName);
 				bool IsVIP = AdminManager.PlayerHasPermissions(player, Config.PlayersSettings.VIPFlag);
 
 				bool IsPrimary = PrimaryWeaponsList.Contains(weaponName);
@@ -441,7 +441,7 @@ namespace Deathmatch
 					PlaySound(player, Config.SoundSettings.CantEquipSound);
 
 					(int NonVIP, int VIP) restrictInfo = GetRestrictData(weaponName, player.Team);
-					player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.WeaponIsRestricted", localizerWeaponName, GetWeaponRestrictLozalizer(restrictInfo.NonVIP), GetWeaponRestrictLozalizer(restrictInfo.VIP)]}");
+					player.PrintToChat(TrChat(player, "Chat.WeaponIsRestricted", localizerWeaponName, GetWeaponRestrictLozalizer(player, restrictInfo.NonVIP), GetWeaponRestrictLozalizer(player, restrictInfo.VIP)));
 					hook.SetReturn(AcquireResult.NotAllowedByMode);
 					return HookResult.Handled;
 				}
@@ -451,12 +451,12 @@ namespace Deathmatch
 				{
 					if (data.PrimaryWeapon.TryGetValue(ActiveCustomMode, out var primaryWeapon) && weaponName == primaryWeapon)
 					{
-						player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.WeaponsIsAlreadySet", localizerWeaponName]}");
+						player.PrintToChat(TrChat(player, "Chat.WeaponsIsAlreadySet", localizerWeaponName));
 						hook.SetReturn(AcquireResult.AlreadyOwned);
 						return HookResult.Handled;
 					}
 					data.PrimaryWeapon[ActiveCustomMode] = weaponName;
-					player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.PrimaryWeaponSet", localizerWeaponName]}");
+					player.PrintToChat(TrChat(player, "Chat.PrimaryWeaponSet", localizerWeaponName));
 
 					var weapon = p?.GetWeaponFromSlot(gear_slot_t.GEAR_SLOT_RIFLE);
 					if (!Config.Gameplay.SwitchWeapons && weapon != null)
@@ -469,12 +469,12 @@ namespace Deathmatch
 				{
 					if (data.SecondaryWeapon.TryGetValue(ActiveCustomMode, out var secondaryWeapon) && weaponName == secondaryWeapon)
 					{
-						player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.WeaponsIsAlreadySet", localizerWeaponName]}");
+						player.PrintToChat(TrChat(player, "Chat.WeaponsIsAlreadySet", localizerWeaponName));
 						hook.SetReturn(AcquireResult.AlreadyOwned);
 						return HookResult.Handled;
 					}
 					data.SecondaryWeapon[ActiveCustomMode] = weaponName;
-					player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.SecondaryWeaponSet", localizerWeaponName]}");
+					player.PrintToChat(TrChat(player, "Chat.SecondaryWeaponSet", localizerWeaponName));
 
 					var weapon = p?.GetWeaponFromSlot(gear_slot_t.GEAR_SLOT_PISTOL);
 					if (!Config.Gameplay.SwitchWeapons && weapon != null)

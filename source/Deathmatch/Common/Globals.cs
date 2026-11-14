@@ -41,6 +41,8 @@ namespace Deathmatch
         public static string HudCenterMsg = "";
         public static bool HudHasContent = false;
         private List<CCSPlayerController> _hudPlayerCache = new();
+        private readonly List<string> _hudPlayerText = new();
+        private readonly Dictionary<string, string> _hudLangCache = new();
         private float _lastHudPlayerCacheTime = -10f;
 
         // Cached delegate refs so Unload can RemoveListener/UnhookUserMessage symmetrically
