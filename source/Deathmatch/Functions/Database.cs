@@ -150,6 +150,21 @@ namespace Deathmatch
 
             return new MySqlConnection(builder.ConnectionString);
         }
+        // MySqlConnector keeps idle pooled connections (and their background maintenance) alive after
+        // the last query. Released on unload so a mode switch does not leave them, and the plugin's
+        // load context, behind.
+        private void ClearDatabaseConnectionPools()
+        {
+            try
+            {
+                MySqlConnection.ClearAllPools();
+            }
+            catch (Exception ex)
+            {
+                SendConsoleMessage($"[Deathmatch] Could not clear the database connection pools: '{ex.Message}'", ConsoleColor.Red);
+            }
+        }
+
         public async Task CreateDatabaseConnection()
         {
             using MySqlConnection connection = GetConnection();

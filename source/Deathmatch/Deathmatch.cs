@@ -472,6 +472,8 @@ public partial class Deathmatch : BasePlugin, IPluginConfig<DeathmatchConfig>
         Preferences.Categorie.RemoveAllCategories();
         Preferences.Menu.RemoveAllOptions();
         Preferences.Preference.RemoveAllPreferences();
+
+        ClearDatabaseConnectionPools();
     }
 
     // Tracks AddCommandListener invocations so Unload can match-and-remove
